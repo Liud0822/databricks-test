@@ -1,14 +1,20 @@
 # Databricks notebook source
+# /// script
+# [tool.databricks.environment]
+# environment_version = "5"
+# ///
 # MAGIC %md
 # MAGIC # 02 · Silver — クレンジング / 型付け / 重複除去
 # MAGIC **試験領域**: Transformation（bronze→silver、型変換、null 除去、dedup）
 
 # COMMAND ----------
+
 dbutils.widgets.text("catalog", "quiz_dev"); dbutils.widgets.text("schema", "quiz")
 catalog = dbutils.widgets.get("catalog"); schema = dbutils.widgets.get("schema")
 spark.sql(f"USE CATALOG {catalog}"); spark.sql(f"USE SCHEMA {schema}")
 
 # COMMAND ----------
+
 # users: user_id で重複除去、文字列を trim
 spark.sql("""
 CREATE OR REPLACE TABLE silver_users AS

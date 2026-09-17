@@ -1,14 +1,20 @@
 # Databricks notebook source
+# /// script
+# [tool.databricks.environment]
+# environment_version = "5"
+# ///
 # MAGIC %md
 # MAGIC # 03 · Gold — ディメンション / ファクト / 集計（Liquid Clustering）
 # MAGIC **試験領域**: Transformation（Gold モデリング、結合、集計）, 最適化（Liquid Clustering）
 
 # COMMAND ----------
+
 dbutils.widgets.text("catalog", "quiz_dev"); dbutils.widgets.text("schema", "quiz")
 catalog = dbutils.widgets.get("catalog"); schema = dbutils.widgets.get("schema")
 spark.sql(f"USE CATALOG {catalog}"); spark.sql(f"USE SCHEMA {schema}")
 
 # COMMAND ----------
+
 # ディメンション
 spark.sql("CREATE OR REPLACE TABLE dim_user     AS SELECT * FROM silver_users")
 spark.sql("CREATE OR REPLACE TABLE dim_question AS SELECT * FROM silver_questions")
@@ -25,6 +31,7 @@ JOIN silver_questions q USING (question_id)
 """)
 
 # COMMAND ----------
+
 # 集計: ユーザー×ドメインの正答率（分析システムの中核指標）
 spark.sql("""
 CREATE OR REPLACE TABLE agg_domain_accuracy AS
