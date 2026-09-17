@@ -7,11 +7,13 @@
 # MAGIC 質問例を用意する。実際の Genie Space 作成は UI（Genie → New）で行う（ガイド参照）。
 
 # COMMAND ----------
+
 dbutils.widgets.text("catalog", "quiz_dev"); dbutils.widgets.text("schema", "quiz")
 catalog = dbutils.widgets.get("catalog"); schema = dbutils.widgets.get("schema")
 spark.sql(f"USE CATALOG {catalog}"); spark.sql(f"USE SCHEMA {schema}")
 
 # COMMAND ----------
+
 # 統合ビュー: seed の履歴(fact_attempt) ∪ アプリの解答(app_attempts)
 #  → ここが「ループを閉じる」核心。以降の集計はこの v_all_attempts を見る。
 spark.sql("""
@@ -63,6 +65,7 @@ display(spark.sql("SELECT source, count(*) AS attempts FROM v_all_attempts GROUP
 display(spark.table("v_domain_summary").orderBy("accuracy_pct"))
 
 # COMMAND ----------
+
 # MAGIC %md
 # MAGIC ## Genie Space に登録するテーブル/ビュー
 # MAGIC - **`v_all_attempts`**（seed＋アプリの統合明細・分析の主役）, `v_domain_summary`, `v_region_summary`, `v_hard_questions`

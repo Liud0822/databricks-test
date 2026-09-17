@@ -8,4 +8,4 @@ env:
     value: "quiz_dev"      # 本番アプリにするなら quiz_prod
   - name: QUIZ_SCHEMA
     value: "quiz"
-  # DATABRICKS_WAREHOUSE_ID は SQL warehouse リソースから割り当てる（下の resources 参照）
+  # DATABRICKS_WAREHOUSE_ID は SQL warehouse リソースから割り当てる（UI: App → Edit → Environment variables で設定）
