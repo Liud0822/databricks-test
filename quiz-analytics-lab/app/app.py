@@ -132,7 +132,10 @@ elif st.session_state.phase == "quiz":
     else:
         sel = st.session_state.answers[i]
         ok = sel == q["answer"]
-        st.success(f"◯ 正解（{chr(65+q['answer'])}）") if ok else st.error(f"✕ 不正解（正解：{chr(65+q['answer'])}）")
+        if ok:
+            st.success(f"◯ 正解（{chr(65+q['answer'])}）")
+        else:
+            st.error(f"✕ 不正解（正解：{chr(65+q['answer'])}）")
         st.markdown(f"**解説**：{q['explanation']}")
         if q.get("concept"):
             st.info(f"📘 用語・ポイント：{q['concept']}")
