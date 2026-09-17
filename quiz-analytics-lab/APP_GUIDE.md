@@ -49,6 +49,30 @@ Deploy → URL を開く → 「開始する」で10問。結果画面で `app_a
   「アプリ(source=app)と履歴(source=seed)で正答率を比較して」などを質問できる。
 - `app_attempts` は `domain` 列を持つので、`v_all_attempts` で `fact_attempt` とそのまま UNION される。
 
+## 7) ライブ・メトリクス（LDP＋table update トリガー）
+`app_attempts` が更新されるたびにメトリクスを**自動更新**する宣言的パイプライン。`03`/`05` の手動再実行が不要になる。
+- **`resources/quiz_metrics.pipeline.yml`（LDP）＋ `src/07_ldp_metrics.py`**：
+  ストリーミングテーブル `ldp_app_attempts`（**expectations で品質ゲート**）と、
+  マテリアライズドビュー `mv_domain_accuracy`（seed履歴＋アプリ解答の正答率）を生成。
+- **`resources/quiz_metrics.job.yml`**：`app_attempts` の **table update トリガー**で上記パイプラインを起動。
+
+セットアップ：
+1. `cd quiz-analytics-lab && databricks bundle deploy -t dev`（パイプラインとジョブが作られる）。
+2. 初回だけ LDP パイプラインを手動 Run（以後はトリガーで自動更新）。
+3. Genie は **`mv_domain_accuracy`** を見れば常に最新の正答率になる（手動再実行不要）。
+
+> Free Edition はパイプライン各種1本まで。table update トリガーのキーが `bundle validate` で通らない場合は、
+> Jobs UI 側でトリガーを「テーブル更新: `app_attempts`」に設定してもよい。
+
+## 本番（社内・通常ワークスペース）へ移すとき
+現状は Free・単一ユーザー前提だが、十数人規模の社内利用へは地続きで移せる。移行時のポイント：
+- **常設運用**：Free はアプリが24hで自動停止。通常WSなら常時稼働できる。
+- **アクセス付与**：App を利用者**グループ**に共有。`app_attempts` は各人の `principal`（メール）で記録済み。
+- **ガバナンスを実グループ化**：`access_policy` 表方式に加え、`is_account_group_member('...')` ベースの
+  列マスク/行フィルタへ切り替えれば「PII閲覧は限定グループ」「自地域のみ」が実ユーザーで効く。
+- **同時実行**：アプリの書き込みは**都度接続**にしてあるので多人数でも安全。Delta 追記は競合しない。
+- **監査**：`system.access.audit` で「誰が PII テーブルを見たか」を追跡できる。
+
 ## dev/prod
 `app.yaml` の `QUIZ_CATALOG` を `quiz_prod` にすれば本番カタログを見るアプリになる（dev/prod で別アプリにできる）。
 

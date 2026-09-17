@@ -178,6 +178,9 @@ Bundle deploy でジョブ `quiz-analytics [...]` が作られる。00→01→02
 
 ## 9. 発展編（余力があれば）
 
+- **LDP ライブ・メトリクス**（Transformation 深掘り／推奨）：`src/07_ldp_metrics.py`＋`resources/quiz_metrics.pipeline.yml`。
+  ストリーミングテーブル＋マテリアライズドビュー＋expectations で、アプリ解答が届くたびに正答率を自動更新。
+  `app_attempts` の table update トリガー（`quiz_metrics.job.yml`）で起動。詳細は APP_GUIDE の「7) ライブ・メトリクス」。
 - **Auto Loader**（Ingestion 深掘り）：Bronze を COPY INTO の代わりにストリーミング取り込みで。
   ```python
   (spark.readStream.format("cloudFiles")

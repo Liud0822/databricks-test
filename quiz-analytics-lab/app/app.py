@@ -22,15 +22,19 @@ N_QUESTIONS = 10
 st.set_page_config(page_title="DEA 模擬題", page_icon="📝", layout="centered")
 
 
-# ---- 接続（キャッシュ） ----
-@st.cache_resource(ttl=600)
-def get_conn():
+# ---- 接続 ----
+def _connect():
     cfg = Config()  # App の OAuth 認証を自動で読む
     return sql.connect(
         server_hostname=cfg.host,
         http_path=f"/sql/1.0/warehouses/{WAREHOUSE_ID}",
         credentials_provider=lambda: cfg.authenticate,
     )
+
+# 読み取り（問題一覧）は共有キャッシュでOK。書き込みは多人数の同時実行に備え都度接続にする。
+@st.cache_resource(ttl=600)
+def get_conn():
+    return _connect()
 
 
 @st.cache_data(ttl=600)
@@ -43,11 +47,18 @@ def load_questions():
 
 
 def viewer_email():
+    # Databricks Apps が転送する閲覧者IDヘッダ。多人数運用で誰の解答かを正しく記録する。
     try:
         h = st.context.headers
-        return h.get("X-Forwarded-Email") or h.get("X-Forwarded-Preferred-Username") or "app_user"
+        for k in ("X-Forwarded-Email", "x-forwarded-email",
+                  "X-Forwarded-Preferred-Username", "x-forwarded-preferred-username",
+                  "X-Forwarded-User", "x-forwarded-user"):
+            v = h.get(k)
+            if v:
+                return v
     except Exception:
-        return "app_user"
+        pass
+    return "app_user"
 
 
 def write_attempts(rows):
@@ -56,13 +67,17 @@ def write_attempts(rows):
            f"(attempt_id, principal, session_id, mode, question_id, domain, is_correct, answered_at) "
            f"VALUES (:aid, :prin, :sid, :mode, :qid, :dom, :ok, current_timestamp())")
     prin = viewer_email()
-    with get_conn().cursor() as cur:
-        for r in rows:
-            cur.execute(ins, {
-                "aid": str(uuid.uuid4()), "prin": prin, "sid": st.session_state.sid,
-                "mode": "app", "qid": int(r["question_id"]), "dom": r.get("domain"),
-                "ok": int(r["is_correct"]),
-            })
+    conn = _connect()   # 書き込みは都度接続（共有接続の競合を避け、多人数同時利用に安全）
+    try:
+        with conn.cursor() as cur:
+            for r in rows:
+                cur.execute(ins, {
+                    "aid": str(uuid.uuid4()), "prin": prin, "sid": st.session_state.sid,
+                    "mode": "app", "qid": int(r["question_id"]), "dom": r.get("domain"),
+                    "ok": int(r["is_correct"]),
+                })
+    finally:
+        conn.close()
 
 
 # ---- 状態 ----

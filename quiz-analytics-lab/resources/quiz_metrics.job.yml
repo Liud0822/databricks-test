@@ -1,0 +1,26 @@
+# =============================================================================
+# メトリクス更新ジョブ — table update トリガー
+# 試験領域: Lakeflow Jobs（データ駆動トリガー / pipeline タスク）
+#
+# app_attempts が更新（＝アプリで誰かが解いた）されたら、LDP パイプラインを実行して
+# メトリクスを最新化する。＝「解いたら自動でメトリクス更新」のループ。
+# ※ table update トリガーの詳細キーは環境で異なる場合あり。bundle validate で怒られたら
+#    Jobs UI 側でトリガーを「テーブル更新: app_attempts」に設定してもよい。
+# =============================================================================
+resources:
+  jobs:
+    quiz_metrics_refresh:
+      name: "quiz-metrics-refresh [${var.catalog}]"
+
+      tasks:
+        - task_key: refresh_metrics
+          pipeline_task:
+            pipeline_id: ${resources.pipelines.quiz_metrics.id}
+
+      trigger:
+        table_update:
+          table_names:
+            - ${var.catalog}.${var.schema}.app_attempts
+          # 連続更新でも過剰起動しないよう最小間隔と静定待ちを設定
+          min_time_between_triggers_seconds: 60
+          wait_after_last_change_seconds: 30

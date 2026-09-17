@@ -23,8 +23,8 @@ The project deliberately touches every domain of the May-2026 DEA exam outline:
 |---|---|---|
 | **Databricks Intelligence Platform** | `src/00_setup` | Unity Catalog hierarchy (catalog → schema → volume), serverless compute |
 | **Data Ingestion & Loading** | `src/01_bronze` | `COPY INTO` idempotent incremental load (`FILEFORMAT` / `FORMAT_OPTIONS` / `COPY_OPTIONS`), Auto Loader notes |
-| **Transformation & Modeling** | `src/02_silver`, `src/03_gold` | type casting, dedup (`QUALIFY`), joins, aggregations, **Liquid Clustering** (`CLUSTER BY`) |
-| **Lakeflow Jobs** | `resources/quiz_analytics.job.yml` | multi-task **DAG**, task parameters, trigger types, Repair run |
+| **Transformation & Modeling** | `src/02_silver`, `src/03_gold`, `src/07_ldp_metrics` | type casting, dedup (`QUALIFY`), joins, aggregations, **Liquid Clustering**; **Lakeflow Declarative Pipeline** — streaming table + materialized view + **expectations** |
+| **Lakeflow Jobs** | `resources/*.job.yml` | multi-task **DAG**, task parameters, **table-update trigger**, pipeline task, Repair run |
 | **CI/CD** | `databricks.yml` | **Asset Bundle** with `dev`/`prod` targets & variables, `validate → deploy → run` |
 | **Troubleshooting / Monitoring / Optimization** | `LAB_GUIDE.md` §9 | run history, Spark UI skew/spill, Predictive Optimization |
 | **Governance & Security** | `src/04_governance` | column mask, row filter, governed tags, **ABAC policy** (`CREATE POLICY … has_tag()`), GRANT/REVOKE |
@@ -68,7 +68,9 @@ quiz-analytics-lab/
 ├── APP_GUIDE.md                     # step-by-step playbook (quiz App)          — JP
 ├── databricks.yml                   # Asset Bundle: dev=quiz_dev / prod=quiz_prod
 ├── resources/
-│   └── quiz_analytics.job.yml        # Lakeflow Job (00 → 06 DAG)
+│   ├── quiz_analytics.job.yml        # Lakeflow Job (00 → 06 DAG)
+│   ├── quiz_metrics.pipeline.yml     # Lakeflow Declarative Pipeline (live metrics)
+│   └── quiz_metrics.job.yml          # table-update trigger → refresh metrics
 ├── src/
 │   ├── 00_setup.py                   # catalog / schema / volume
 │   ├── 01_bronze.py                  # COPY INTO ingestion (idempotent)
@@ -76,7 +78,8 @@ quiz-analytics-lab/
 │   ├── 03_gold.py                    # dims / fact / aggregates (+ Liquid Clustering)
 │   ├── 04_governance.py              # column mask / row filter / tags / ABAC policy
 │   ├── 05_genie.py                   # analysis views + Genie question set
-│   └── 06_load_app_tables.py         # questions_app + app_attempts (+ App SP grants)
+│   ├── 06_load_app_tables.py         # questions_app + app_attempts (+ App SP grants)
+│   └── 07_ldp_metrics.py             # LDP: streaming table + materialized view + expectations
 ├── app/
 │   ├── app.py                        # Streamlit quiz app (reads UC, writes app_attempts)
 │   ├── app.yaml                      # app command & env

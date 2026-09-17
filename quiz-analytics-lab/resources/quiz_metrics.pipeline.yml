@@ -1,0 +1,20 @@
+# =============================================================================
+# Lakeflow Declarative Pipeline（LDP）— ライブ・メトリクス
+# 試験領域: Transformation & Modeling（宣言的パイプライン / ストリーミングテーブル / MV / expectations）
+#
+# app_attempts を増分取り込みし、ドメイン別正答率のマテリアライズドビューを自動更新する。
+# 起動は quiz_metrics.job.yml の table update トリガー（app_attempts 更新時）。
+# =============================================================================
+resources:
+  pipelines:
+    quiz_metrics:
+      name: "quiz-metrics [${var.catalog}]"
+      catalog: ${var.catalog}          # 出力先カタログ
+      schema: ${var.schema}            # 出力先スキーマ
+      serverless: true
+      libraries:
+        - notebook:
+            path: ../src/07_ldp_metrics.py
+      configuration:
+        quiz.catalog: ${var.catalog}   # ノートブックが spark.conf.get で受け取る
+        quiz.schema: ${var.schema}
