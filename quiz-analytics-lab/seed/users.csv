@@ -1,0 +1,7 @@
+user_id,display_name,email,region,department,is_owner
+1,You (owner),user1@example.com,Kanto,Engineering,1
+2,Sato Aoi,aoi.sato@example.com,Kanto,Analytics,0
+3,Tanaka Riku,riku.tanaka@example.com,Kansai,Engineering,0
+4,Kimura Hana,hana.kimura@example.com,Kansai,Analytics,0
+5,Ito Sora,sora.ito@example.com,Chubu,Data Platform,0
+6,Yamada Ren,ren.yamada@example.com,Kyushu,Data Platform,0

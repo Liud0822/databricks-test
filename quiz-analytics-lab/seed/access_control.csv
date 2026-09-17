@@ -1,0 +1,4 @@
+principal_email,allowed_region,pii_access
+user1@example.com,ALL,1
+aoi.sato@example.com,Kanto,0
+riku.tanaka@example.com,Kansai,0

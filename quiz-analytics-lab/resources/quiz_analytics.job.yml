@@ -1,0 +1,63 @@
+# =============================================================================
+# Lakeflow ジョブ定義（Bundle から配置）
+# 試験領域: Lakeflow Jobs（マルチタスク / DAG 依存 / パラメータ / トリガー）
+#
+# 00→01→02→03→04→05 を依存関係で直列実行。各タスクに catalog/schema を渡す。
+# Free Edition は同時タスク最大5だが、直列（依存）なので同時実行は常に1で問題なし。
+# =============================================================================
+resources:
+  jobs:
+    quiz_analytics_job:
+      name: "quiz-analytics [${var.catalog}]"
+
+      # --- パラメータ: 全タスクへ catalog / schema を配布 ---
+      parameters:
+        - name: catalog
+          default: ${var.catalog}
+        - name: schema
+          default: ${var.schema}
+
+      tasks:
+        - task_key: setup
+          notebook_task:
+            notebook_path: ../src/00_setup.py
+            base_parameters:
+              catalog: ${var.catalog}
+              schema: ${var.schema}
+
+        - task_key: bronze
+          depends_on: [{ task_key: setup }]
+          notebook_task:
+            notebook_path: ../src/01_bronze.py
+            base_parameters: { catalog: ${var.catalog}, schema: ${var.schema} }
+
+        - task_key: silver
+          depends_on: [{ task_key: bronze }]
+          notebook_task:
+            notebook_path: ../src/02_silver.py
+            base_parameters: { catalog: ${var.catalog}, schema: ${var.schema} }
+
+        - task_key: gold
+          depends_on: [{ task_key: silver }]
+          notebook_task:
+            notebook_path: ../src/03_gold.py
+            base_parameters: { catalog: ${var.catalog}, schema: ${var.schema} }
+
+        - task_key: governance
+          depends_on: [{ task_key: gold }]
+          notebook_task:
+            notebook_path: ../src/04_governance.py
+            base_parameters: { catalog: ${var.catalog}, schema: ${var.schema} }
+
+        - task_key: genie_prep
+          depends_on: [{ task_key: governance }]
+          notebook_task:
+            notebook_path: ../src/05_genie.py
+            base_parameters: { catalog: ${var.catalog}, schema: ${var.schema} }
+
+      # --- トリガー例（試験領域: トリガー種別）---
+      # 毎日 JST 8:00 に実行。データ駆動にしたい場合は file_arrival / table_update に置き換える。
+      schedule:
+        quartz_cron_expression: "0 0 23 * * ?"   # UTC23:00 = JST08:00
+        timezone_id: "UTC"
+        pause_status: PAUSED                      # 学習用に既定は停止

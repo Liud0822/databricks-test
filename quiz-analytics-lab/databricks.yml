@@ -1,0 +1,42 @@
+# =============================================================================
+# Databricks Asset Bundle（Automation Bundle） — 模擬題分析システム
+# 試験領域: CI/CD（Bundle 構造 / targets / variables / overrides）
+#
+# dev/prod をカタログで分離する。CLIで:
+#   databricks bundle validate
+#   databricks bundle deploy -t dev
+#   databricks bundle run  quiz_analytics_job -t dev
+#   databricks bundle deploy -t prod   （本番へ昇格）
+#
+# ※ Free Edition で CREATE CATALOG が不可の場合は、下の各ターゲットの
+#   catalog を "workspace" にし、schema を quiz_dev / quiz_prod に変えるだけで動く
+#   （ノートブックは catalog/schema の2変数で完全にパラメータ化してある）。
+# =============================================================================
+bundle:
+  name: quiz-analytics
+
+include:
+  - resources/*.yml
+
+variables:
+  catalog:
+    description: "ターゲットのカタログ名"
+    default: quiz_dev
+  schema:
+    description: "スキーマ名"
+    default: quiz
+
+targets:
+  dev:
+    mode: development     # リソース名に [dev you] 等が付き、誤って本番を壊さない
+    default: true
+    variables:
+      catalog: quiz_dev
+      schema: quiz
+
+  prod:
+    mode: production      # 本番: 検証が厳しくなる
+    variables:
+      catalog: quiz_prod
+      schema: quiz
+    # 単一ユーザーのFreeなので run_as は既定（自分）。組織では service principal を指定する。
