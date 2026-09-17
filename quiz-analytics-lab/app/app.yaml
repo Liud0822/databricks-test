@@ -1,0 +1,11 @@
+# Databricks App 設定
+# App 作成時に、SQL warehouse リソースを追加し、その値を環境変数
+# DATABRICKS_WAREHOUSE_ID に割り当てること（UI: App → Edit → Resources）。
+command: ["streamlit", "run", "app.py"]
+
+env:
+  - name: QUIZ_CATALOG
+    value: "quiz_dev"      # 本番アプリにするなら quiz_prod
+  - name: QUIZ_SCHEMA
+    value: "quiz"
+  # DATABRICKS_WAREHOUSE_ID は SQL warehouse リソースから割り当てる（下の resources 参照）

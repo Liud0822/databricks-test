@@ -53,7 +53,8 @@ seed CSV ──(COPY INTO)──▶ Bronze ──(clean/型/dedup)──▶ Silv
 やること：`CREATE CATALOG quiz_dev` → `CREATE SCHEMA quiz` → `CREATE VOLUME raw`。
 
 **seed の CSV をアップロード**：Catalog Explorer → `quiz_dev` → `quiz` → Volumes → `raw` → Upload で、`seed/` の
-`users.csv` / `questions.csv` / `attempts.csv` / `access_control.csv` を置く（パスは `/Volumes/quiz_dev/quiz/raw/`）。
+`users.csv` / `questions_full.csv` / `attempts.csv` / `access_control.csv` を置く（パスは `/Volumes/quiz_dev/quiz/raw/`）。
+※ 問題は `questions_full.csv`（実際の45問・全文）を単一ソースにしたので、薄い `questions.csv` は不要（削除可）。
 
 > **試験ポイント（Platform）**：Unity Catalog は メタストア→カタログ→スキーマ→テーブル/ボリューム の階層。ボリュームは「ファイルを置く UC 管理の場所」で、取り込み元として使う。
 
@@ -164,7 +165,7 @@ Bundle deploy でジョブ `quiz-analytics [...]` が作られる。00→01→02
 
 1. ノートブックで分析ビュー（`v_domain_summary` 他）を作成。
 2. 左メニュー **Genie**（または Genie Agents）→ New Space → データに `quiz_dev.quiz` の
-   `v_attempt_enriched` / `v_domain_summary` / `v_region_summary` / `v_hard_questions` / `agg_domain_accuracy` を追加。
+   **`v_all_attempts`**（seed＋アプリ統合）/ `v_domain_summary` / `v_region_summary` / `v_hard_questions` / `v_attempt_enriched` を追加。
 3. 日本語で質問：
    - 「ドメイン別の正答率を低い順に見せて」
    - 「私が一番苦手なドメインは？」
